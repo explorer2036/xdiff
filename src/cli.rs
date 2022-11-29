@@ -1,65 +1,68 @@
-use anyhow::{anyhow, Ok, Result};
+use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
 
 /// Diff two http requests and compare the difference of the responses
 #[derive(Debug, Parser)]
 #[clap(version, author, about, long_about = None)]
-pub(crate) struct Args {
+pub struct Args {
     #[clap(subcommand)]
     pub action: Action,
 }
 
 #[derive(Debug, Subcommand)]
-pub(crate) enum Action {
+#[non_exhaustive]
+pub enum Action {
     /// Diff two API responses based on given profile
     Run(RunArgs),
 }
 
 #[derive(Parser, Debug)]
-pub(crate) struct RunArgs {
+pub struct RunArgs {
     /// Profile name
     #[clap(short, long, value_parser)]
-    profile: String,
+    pub profile: String,
 
-    // Override args
-    // For query params, use `-e key=value`
-    // For headers, use `-e %key=value`
-    // For body, use `-e @key=value`
+    /// Override args, which could be used to override the query, headers and body of the request.
+    /// For query params, use `-e key=value`
+    /// For headers, use `-e %key=value`
+    /// For body, use `-e @key=value`
     #[clap(short, long, value_parser = parse_key_val, number_of_values = 1)]
-    extra_args: Vec<KeyVal>,
+    pub extra_args: Vec<KeyVal>,
+
+    /// Configuration to use for diff
+    #[clap(short, long, default_value = "fixtures/test.yaml")]
+    pub config: Option<String>,
 }
 
-pub(crate) enum KeyValType {
+#[derive(Debug, Clone)]
+pub enum KeyValType {
     Query,
     Header,
     Body,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct KeyVal {
-    key: String,
-    value: String,
+pub struct KeyVal {
+    pub key_type: KeyValType,
+    pub key: String,
+    pub value: String,
 }
 
 fn parse_key_val(s: &str) -> Result<KeyVal> {
     let mut parts = s.splitn(2, '=');
 
-    let retrieve = |v: Option<&str>| -> Result<&str> {
-        Ok(v.ok_or(anyhow!("invalid key or value: {}", v.unwrap()))?
-            .trim())
+    let key = parts.next().ok_or_else(|| anyhow!("invalid key"))?;
+    let value = parts.next().ok_or_else(|| anyhow!("invalid value"))?;
+    let (key_type, key) = match key.chars().next() {
+        Some('%') => (KeyValType::Header, key[1..].to_string()),
+        Some('@') => (KeyValType::Body, key[1..].to_string()),
+        Some(v) if v.is_ascii_alphabetic() => (KeyValType::Query, key.to_string()),
+        _ => Err(anyhow!("invalid key: {}", key))?,
     };
 
-    let key = retrieve(parts.next()).unwrap();
-    let value = retrieve(parts.next()).unwrap();
-    let key_type = match key.chars().next() {
-        Some('%') => KeyValType::Header,
-        Some('@') => KeyValType::Body,
-        _ => KeyValType::Query,
-    };
-
-    let key = match key_type {
-        KeyValType::Header => key[1..].to_string(),
-        KeyValType::Body => key[1..].to_string(),
-        _ => key.to_string(),
-    };
+    Ok(KeyVal {
+        key_type: key_type,
+        key: key.to_string(),
+        value: value.to_string(),
+    })
 }

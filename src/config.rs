@@ -1,7 +1,9 @@
-use anyhow::Ok;
+use anyhow::{Ok, Result};
 use http::{HeaderMap, Method, Uri};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use crate::ExtraArgs;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -62,8 +64,9 @@ impl Config {
 }
 
 impl Profile {
-    // pub fn diff(&self, args: Args) -> Result<String> {
-    //     let response1 = self.request1.send(&args).await?;
-    //     let response1 = self.request2.send(&args).await?;
-    // }
+    pub async fn diff(&self, args: ExtraArgs) -> Result<String> {
+        println!("profile: {:?}", self);
+        println!("args: {:?}", args);
+        Ok("".to_string())
+    }
 }
