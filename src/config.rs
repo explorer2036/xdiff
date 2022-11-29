@@ -55,4 +55,15 @@ impl Config {
     pub fn from_yaml(content: &str) -> anyhow::Result<Self> {
         Ok(serde_yaml::from_str(content)?)
     }
+
+    pub fn get_profile(&self, name: &str) -> Option<&Profile> {
+        self.profiles.get(name)
+    }
+}
+
+impl Profile {
+    // pub fn diff(&self, args: Args) -> Result<String> {
+    //     let response1 = self.request1.send(&args).await?;
+    //     let response1 = self.request2.send(&args).await?;
+    // }
 }
