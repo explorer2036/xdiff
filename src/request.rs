@@ -32,7 +32,7 @@ pub struct RequestContext {
     body: Option<serde_json::Value>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq, Eq)]
 pub struct ResponseContext {
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     skip_headers: Vec<String>,
@@ -73,23 +73,19 @@ impl ResponseHandler {
 }
 
 fn filter_json(text: &str, skip_body: &[String]) -> Result<String> {
-    let json: serde_json::Value = serde_json::from_str(text)?;
-    match json {
-        serde_json::Value::Object(mut obj) => {
-            for key in skip_body {
-                obj.remove(key);
-            }
-            Ok(serde_json::to_string_pretty(&obj)?)
+    let mut json: serde_json::Value = serde_json::from_str(text)?;
+    if let serde_json::Value::Object(ref mut obj) = json {
+        for key in skip_body {
+            obj.remove(key);
         }
-        _ => Ok(text.to_string()),
     }
+    Ok(serde_json::to_string_pretty(&json)?)
 }
 
 fn get_content_type(headers: &HeaderMap) -> Option<&str> {
     headers
         .get(header::CONTENT_TYPE)
-        .map(|v| v.to_str().unwrap().split(';').next())
-        .flatten()
+        .and_then(|v| v.to_str().unwrap().split(';').next())
 }
 
 impl RequestContext {
@@ -100,6 +96,26 @@ impl RequestContext {
         let request = builder.query(&query).headers(headers).body(body).build()?;
         let res = client.execute(request).await?;
         Ok(ResponseHandler(res))
+    }
+
+    pub fn validate(&self) -> Result<()> {
+        if let Some(params) = self.params.as_ref() {
+            if !params.is_object() {
+                return Err(anyhow!(
+                    "loading config: params must be an object\n{}",
+                    serde_yaml::to_string(params)?
+                ));
+            }
+        }
+        if let Some(body) = self.body.as_ref() {
+            if !body.is_object() {
+                return Err(anyhow!(
+                    "loading config: body must be an object\n{}",
+                    serde_yaml::to_string(body)?
+                ));
+            }
+        }
+        Ok(())
     }
 
     pub fn generate(&self, args: &Args) -> Result<(HeaderMap, serde_json::Value, String)> {

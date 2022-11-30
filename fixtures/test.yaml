@@ -9,7 +9,7 @@ rust:
   request2:
     method: GET
     url: https://www.rust-lang.org/
-    params: {}
+    params:
   response:
     skip_headers:
       - set-cookie
