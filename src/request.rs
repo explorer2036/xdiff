@@ -44,7 +44,7 @@ pub struct ResponseContext {
 pub struct ResponseHandler(Response);
 
 impl ResponseHandler {
-    pub async fn filter_text(self, ctx: &ResponseContext) -> Result<String> {
+    pub async fn resolve_text(self, ctx: &ResponseContext) -> Result<String> {
         let res = self.0;
 
         let mut output = String::new();

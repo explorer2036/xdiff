@@ -37,8 +37,8 @@ impl Item {
         let response1 = self.request1.send(&args).await?;
         let response2 = self.request2.send(&args).await?;
 
-        let text1 = response1.filter_text(&self.response).await?;
-        let text2 = response2.filter_text(&self.response).await?;
+        let text1 = response1.resolve_text(&self.response).await?;
+        let text2 = response2.resolve_text(&self.response).await?;
 
         Ok(build_diff(text1, text2)?)
     }

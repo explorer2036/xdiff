@@ -28,3 +28,8 @@ todo:
   response:
     skip_headers:
       - report-to
+      - date
+      - cf-ray
+      - x-ratelimit-reset
+    skip_body:
+      - id
