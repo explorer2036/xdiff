@@ -1252,6 +1252,7 @@ dependencies = [
  "form_urlencoded",
  "idna",
  "percent-encoding",
+ "serde",
 ]
 
 [[package]]
@@ -1476,11 +1477,14 @@ dependencies = [
  "clap",
  "http",
  "http-serde",
+ "mime",
  "reqwest",
  "serde",
  "serde_json",
+ "serde_urlencoded",
  "serde_with",
  "serde_yaml",
  "similar",
  "tokio",
+ "url",
 ]

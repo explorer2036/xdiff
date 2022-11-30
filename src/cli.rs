@@ -4,7 +4,7 @@ use clap::{Parser, Subcommand};
 /// Diff two http requests and compare the difference of the responses
 #[derive(Debug, Parser)]
 #[clap(version, author, about, long_about = None)]
-pub struct Args {
+pub struct Options {
     #[clap(subcommand)]
     pub action: Action,
 }
@@ -13,21 +13,21 @@ pub struct Args {
 #[non_exhaustive]
 pub enum Action {
     /// Diff two API responses based on given profile
-    Run(RunArgs),
+    Run(RunOptions),
 }
 
 #[derive(Parser, Debug)]
-pub struct RunArgs {
-    /// Profile name
+pub struct RunOptions {
+    /// Item name
     #[clap(short, long, value_parser)]
-    pub profile: String,
+    pub item: String,
 
-    /// Override args, which could be used to override the query, headers and body of the request.
+    /// They are used to override the query, headers and body of the request.
     /// For query params, use `-e key=value`
     /// For headers, use `-e %key=value`
     /// For body, use `-e @key=value`
     #[clap(short, long, value_parser = parse_key_val, number_of_values = 1)]
-    pub extra_args: Vec<KeyVal>,
+    pub args: Vec<KeyVal>,
 
     /// Configuration to use for diff
     #[clap(short, long, default_value = "fixtures/test.yaml")]
@@ -36,9 +36,18 @@ pub struct RunArgs {
 
 #[derive(Debug, Clone)]
 pub enum KeyValType {
+    /// if key has no any prefix, it is for query
     Query,
+    /// if key starts with '#', it is for header
     Header,
+    /// if key starts with '@', it is for body
     Body,
+}
+
+impl Default for KeyValType {
+    fn default() -> Self {
+        Self::Query
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -61,7 +70,7 @@ fn parse_key_val(s: &str) -> Result<KeyVal> {
     };
 
     Ok(KeyVal {
-        key_type: key_type,
+        key_type,
         key: key.to_string(),
         value: value.to_string(),
     })

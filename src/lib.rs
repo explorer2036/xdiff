@@ -1,18 +1,20 @@
 pub mod cli;
 mod config;
+mod req;
 use cli::{KeyVal, KeyValType};
 
-pub use cli::Args;
-pub use config::{Config, Profile, Request, Response};
+pub use cli::Options;
+pub use config::{Config, Item};
+pub use req::RequestContext;
 
 #[derive(Debug, Clone)]
-pub struct ExtraArgs {
+pub struct Args {
     pub query: Vec<(String, String)>,
     pub headers: Vec<(String, String)>,
     pub body: Vec<(String, String)>,
 }
 
-impl From<Vec<KeyVal>> for ExtraArgs {
+impl From<Vec<KeyVal>> for Args {
     fn from(args: Vec<KeyVal>) -> Self {
         let mut query = vec![];
         let mut headers = vec![];
@@ -25,7 +27,6 @@ impl From<Vec<KeyVal>> for ExtraArgs {
                 KeyValType::Body => body.push((arg.key, arg.value)),
             }
         }
-
         Self {
             query,
             headers,
