@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.66"
 clap = { version = "4.0.27", features = ["derive"] }
+console = "0.15.2"
 http = "0.2.8"
 http-serde = "1.1.2"
 mime = "0.3.16"
@@ -21,6 +22,6 @@ serde_json = "1.0.89"
 serde_urlencoded = "0.7.1"
 serde_with = "2.1.0"
 serde_yaml = "0.9.14"
-similar = "2.2.1"
+similar = { version = "2.2.1", features = ["inline", "bytes"] }
 tokio = { version = "1.22.0", features = ["full"] }
 url = { version = "2.3.1", features = ["serde"] }

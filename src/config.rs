@@ -2,7 +2,7 @@ use anyhow::{Ok, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::{req::ResponseContext, Args, RequestContext};
+use crate::{request::ResponseContext, similar::build_diff, Args, RequestContext};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -12,7 +12,8 @@ pub struct Config {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Item {
-    request: RequestContext,
+    request1: RequestContext,
+    request2: RequestContext,
     response: ResponseContext,
 }
 
@@ -33,12 +34,12 @@ impl Config {
 
 impl Item {
     pub async fn diff(&self, args: Args) -> Result<String> {
-        let response = self.request.send(&args).await?;
-        let text = response.filter_text(&self.response).await?;
+        let response1 = self.request1.send(&args).await?;
+        let response2 = self.request2.send(&args).await?;
 
-        println!("args: {:?}", args);
-        // println!("{}", text);
+        let text1 = response1.filter_text(&self.response).await?;
+        let text2 = response2.filter_text(&self.response).await?;
 
-        Ok(text)
+        Ok(build_diff(text1, text2)?)
     }
 }

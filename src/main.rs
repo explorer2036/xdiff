@@ -1,5 +1,7 @@
 use anyhow::{Ok, Result};
 use clap::Parser;
+use std::io::stdout;
+use std::io::Write;
 use xdiff::{
     cli::{Action, Options, RunOptions},
     Config,
@@ -22,11 +24,14 @@ async fn run(opts: RunOptions) -> Result<()> {
         .config
         .unwrap_or_else(|| "fixtures/test.yaml".to_string());
     let config = Config::load_yaml(&file).await?;
+
     let item = config.get_item(&opts.item).ok_or_else(|| {
         anyhow::anyhow!("profile {} not found in config file {}", opts.item, file)
     })?;
     let args = opts.args.into();
     let output = item.diff(args).await?;
-    println!("{}", output);
+    let mut stdout = stdout().lock();
+    write!(stdout, "{}", output)?;
+
     Ok(())
 }

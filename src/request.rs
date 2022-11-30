@@ -130,10 +130,6 @@ impl RequestContext {
                 let body = serde_json::to_string(&body)?;
                 Ok((headers, query, body))
             }
-            Some("application/x-www-form-urlencoded") => {
-                let body = serde_urlencoded::to_string(&body)?;
-                Ok((headers, query, body))
-            }
             _ => Err(anyhow!("unsupported content-type")),
         }
     }
