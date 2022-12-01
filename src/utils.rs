@@ -5,6 +5,11 @@ use console::{style, Style};
 use similar::{ChangeTag, TextDiff};
 use std::io::Write;
 
+use syntect::easy::HighlightLines;
+use syntect::highlighting::ThemeSet;
+use syntect::parsing::SyntaxSet;
+use syntect::util::{as_24_bit_terminal_escaped, LinesWithEndings};
+
 struct Line(Option<usize>);
 
 impl Display for Line {
@@ -53,4 +58,20 @@ pub fn build_diff(old: String, new: String) -> Result<String> {
     }
 
     Ok(String::from_utf8(buf)?)
+}
+
+pub fn highlight_text(text: &str, extension: &str) -> Result<String> {
+    let ps = SyntaxSet::load_defaults_newlines();
+    let ts = ThemeSet::load_defaults();
+
+    let syntax = ps.find_syntax_by_extension(extension).unwrap();
+    let mut h = HighlightLines::new(syntax, &ts.themes["base16-ocean.dark"]);
+
+    let mut output = String::new();
+    for line in LinesWithEndings::from(text) {
+        let ranges = h.highlight_line(line, &ps).unwrap();
+        let escaped = as_24_bit_terminal_escaped(&ranges[..], false);
+        output.push_str(&escaped);
+    }
+    Ok(output)
 }

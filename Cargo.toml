@@ -24,5 +24,6 @@ serde_urlencoded = "0.7.1"
 serde_with = "2.1.0"
 serde_yaml = "0.9.14"
 similar = { version = "2.2.1", features = ["inline", "bytes"] }
+syntect = "5.0.0"
 tokio = { version = "1.22.0", features = ["full"] }
 url = { version = "2.3.1", features = ["serde"] }

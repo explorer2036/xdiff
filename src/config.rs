@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use crate::{request::ResponseContext, similar::build_diff, Args, RequestContext};
+use crate::{request::ResponseContext, utils::build_diff, Args, RequestContext};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {

@@ -1,12 +1,13 @@
 pub mod cli;
 mod config;
 mod request;
-mod similar;
+mod utils;
 use cli::{KeyVal, KeyValType};
 
 pub use cli::Options;
 pub use config::{Config, Item};
 pub use request::{RequestContext, ResponseContext};
+pub use utils::{build_diff, highlight_text};
 
 #[derive(Debug, Default, Clone)]
 pub struct Args {

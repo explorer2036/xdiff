@@ -60,8 +60,9 @@ async fn parse() -> Result<()> {
     let item = Item::new(request1, request2, response);
     let config = Config::new(vec![(item_name, item)].into_iter().collect());
     let output = serde_yaml::to_string(&config)?;
+    let after_highlight = xdiff::highlight_text(&output, "yaml");
     let mut stdout = stdout().lock();
-    write!(stdout, "{}", output)?;
+    write!(stdout, "\n{}", after_highlight.unwrap())?;
     Ok(())
 }
 
