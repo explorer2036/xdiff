@@ -4,7 +4,6 @@ mod request;
 mod utils;
 use cli::{KeyVal, KeyValType};
 
-pub use cli::Options;
 pub use config::{Config, Item};
 pub use request::{RequestContext, ResponseContext};
 pub use utils::{build_diff, highlight_text};

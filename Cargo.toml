@@ -3,6 +3,10 @@ name = "xdiff"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "xdiff"
+path = "src/bin/xdiff.rs"
+
 [dependencies]
 anyhow = "1.0.66"
 clap = { version = "4.0.27", features = ["derive"] }
