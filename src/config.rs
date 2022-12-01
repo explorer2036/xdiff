@@ -23,6 +23,10 @@ fn is_default<T: Default + PartialEq>(v: &T) -> bool {
 }
 
 impl Config {
+    pub fn new(items: HashMap<String, Item>) -> Self {
+        Self { items }
+    }
+
     pub async fn load_yaml(path: &str) -> Result<Self> {
         let content = tokio::fs::read_to_string(path).await?;
         Self::from_yaml(&content)
@@ -48,6 +52,18 @@ impl Config {
 }
 
 impl Item {
+    pub fn new(
+        request1: RequestContext,
+        request2: RequestContext,
+        response: ResponseContext,
+    ) -> Self {
+        Self {
+            request1,
+            request2,
+            response,
+        }
+    }
+
     pub async fn diff(&self, args: Args) -> Result<String> {
         let response1 = self.request1.send(&args).await?;
         let response2 = self.request2.send(&args).await?;

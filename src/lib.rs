@@ -6,9 +6,9 @@ use cli::{KeyVal, KeyValType};
 
 pub use cli::Options;
 pub use config::{Config, Item};
-pub use request::RequestContext;
+pub use request::{RequestContext, ResponseContext};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct Args {
     pub query: Vec<(String, String)>,
     pub headers: Vec<(String, String)>,

@@ -14,6 +14,8 @@ pub struct Options {
 pub enum Action {
     /// Diff two API responses based on given profile
     Run(RunOptions),
+    /// Parse URLs to generate a profile
+    Parse,
 }
 
 #[derive(Parser, Debug)]

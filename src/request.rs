@@ -18,7 +18,7 @@ pub struct RequestContext {
     method: Method,
     url: Url,
 
-    #[serde(skip_serializing_if = "Option::is_none", default)]
+    #[serde(skip_serializing_if = "empty_json_value", default)]
     params: Option<serde_json::Value>,
 
     #[serde(
@@ -28,8 +28,53 @@ pub struct RequestContext {
     )]
     headers: HeaderMap,
 
-    #[serde(skip_serializing_if = "Option::is_none", default)]
+    #[serde(skip_serializing_if = "empty_json_value", default)]
     body: Option<serde_json::Value>,
+}
+
+fn empty_json_value(v: &Option<serde_json::Value>) -> bool {
+    v.as_ref()
+        .map_or(true, |v| v.as_object().unwrap().is_empty())
+}
+
+impl RequestContext {
+    fn new(
+        method: Method,
+        url: Url,
+        params: Option<serde_json::Value>,
+        headers: HeaderMap,
+        body: Option<serde_json::Value>,
+    ) -> Self {
+        Self {
+            method,
+            url,
+            params,
+            headers,
+            body,
+        }
+    }
+}
+
+impl FromStr for RequestContext {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let mut url = Url::parse(s)?;
+        let pairs = url.query_pairs();
+        let mut params = json!({});
+        for (key, value) in pairs {
+            params[&*key] = value.parse()?;
+        }
+        url.set_query(None);
+
+        Ok(RequestContext::new(
+            Method::GET,
+            url,
+            Some(params),
+            HeaderMap::new(),
+            None,
+        ))
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default, PartialEq, Eq)]
@@ -38,6 +83,15 @@ pub struct ResponseContext {
     skip_headers: Vec<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     skip_body: Vec<String>,
+}
+
+impl ResponseContext {
+    pub fn new(skip_headers: Vec<String>, skip_body: Vec<String>) -> Self {
+        Self {
+            skip_headers,
+            skip_body,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -58,7 +112,7 @@ impl ResponseHandler {
         }
 
         let text = res.text().await?;
-        let content_type = get_content_type(&headers);
+        let content_type = resolve_content_type(&headers);
         match content_type.as_deref() {
             Some("application/json") => {
                 let text = filter_json(&text, &ctx.skip_body)?;
@@ -69,6 +123,14 @@ impl ResponseHandler {
             }
         }
         Ok(output)
+    }
+
+    pub fn resolve_header_keys(&self) -> Vec<String> {
+        self.0
+            .headers()
+            .iter()
+            .map(|(k, _)| k.as_str().to_owned())
+            .collect()
     }
 }
 
@@ -82,7 +144,7 @@ fn filter_json(text: &str, skip_body: &[String]) -> Result<String> {
     Ok(serde_json::to_string_pretty(&json)?)
 }
 
-fn get_content_type(headers: &HeaderMap) -> Option<&str> {
+fn resolve_content_type(headers: &HeaderMap) -> Option<&str> {
     headers
         .get(header::CONTENT_TYPE)
         .and_then(|v| v.to_str().unwrap().split(';').next())
@@ -140,7 +202,7 @@ impl RequestContext {
             body[k] = v.parse()?;
         }
 
-        let content_type = get_content_type(&headers);
+        let content_type = resolve_content_type(&headers);
         match content_type.as_deref() {
             Some("application/json") => {
                 let body = serde_json::to_string(&body)?;
