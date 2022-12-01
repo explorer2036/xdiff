@@ -2,16 +2,16 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Input;
-use dialoguer::MultiSelect;
 use std::io::stdout;
 use std::io::Write;
+use xdiff::body_text;
 use xdiff::cli::{parse_key_val, KeyVal};
-use xdiff::Args;
-use xdiff::DiffConfig;
-use xdiff::DiffItem;
+use xdiff::headers_text;
+use xdiff::highlight_text;
+use xdiff::status_text;
 use xdiff::Load;
+use xdiff::RequestConfig;
 use xdiff::RequestContext;
-use xdiff::ResponseContext;
 
 /// Diff two http requests and compare the difference of the responses
 #[derive(Debug, Parser)]
@@ -44,7 +44,7 @@ pub struct RunOptions {
     pub args: Vec<KeyVal>,
 
     /// Configuration to use for diff
-    #[clap(short, long, default_value = "fixtures/test.yaml")]
+    #[clap(short, long, default_value = "fixtures/xreq.yaml")]
     pub config: Option<String>,
 }
 
@@ -61,37 +61,18 @@ async fn main() -> Result<()> {
 async fn parse() -> Result<()> {
     let theme = ColorfulTheme::default();
 
-    let url1: String = Input::with_theme(&theme)
-        .with_prompt("Enter url1")
+    let url: String = Input::with_theme(&theme)
+        .with_prompt("Enter url")
         .interact_text()
         .unwrap();
-    let request1: RequestContext = url1.parse()?;
-
-    let url2: String = Input::with_theme(&theme)
-        .with_prompt("Enter url2")
-        .interact_text()
-        .unwrap();
-    let request2: RequestContext = url2.parse()?;
 
     let name: String = Input::with_theme(&theme)
         .with_prompt("Enter item name")
         .interact_text()
         .unwrap();
 
-    let res = request1.send(&Args::default()).await?;
-    let headers = res.header_keys();
-    let chosen = MultiSelect::with_theme(&theme)
-        .with_prompt("Select headers to skip")
-        .items(&headers)
-        .interact()?;
-    let skip_headers = chosen
-        .iter()
-        .map(|i| headers[*i].to_string())
-        .collect::<Vec<_>>();
-
-    let response = ResponseContext::new(skip_headers, vec![]);
-    let item = DiffItem::new(request1, request2, response);
-    let config = DiffConfig::new(vec![(name, item)].into_iter().collect());
+    let request: RequestContext = url.parse()?;
+    let config = RequestConfig::new(vec![(name, request)].into_iter().collect());
     let output = serde_yaml::to_string(&config)?;
     let after_highlight = xdiff::highlight_text(&output, "yaml");
     let mut stdout = stdout().lock();
@@ -99,21 +80,30 @@ async fn parse() -> Result<()> {
     Ok(())
 }
 
-// cargo run --bin xdiff run -i todo -a a=100 -a %b=1 -a @c=2
-// cargo run --bin xdiff run -i rust -a a=100 -a %b=1 -a @c=2
+// cargo run --bin xreq run -i todo
 async fn run(opts: RunOptions) -> Result<()> {
     let file = opts
         .config
-        .unwrap_or_else(|| "fixtures/test.yaml".to_string());
-    let config = DiffConfig::load_yaml(&file).await?;
+        .unwrap_or_else(|| "fixtures/xreq.yaml".to_string());
+    let config = RequestConfig::load_yaml(&file).await?;
 
     let item = config.get_item(&opts.item).ok_or_else(|| {
-        anyhow::anyhow!("xdiff item {} not found in config file {}", opts.item, file)
+        anyhow::anyhow!("xreq item {} not found in config file {}", opts.item, file)
     })?;
     let args = opts.args.into();
-    let output = item.diff(args).await?;
-    let mut stdout = stdout().lock();
-    write!(stdout, "{}", output)?;
+    let url = item.url(&args)?;
+    let res = item.send(&args).await?.into_inner();
+
+    let status = status_text(&res)?;
+    let headers = headers_text(&res, &[])?;
+    let body = body_text(res, &[]).await?;
+
+    let mut output = String::new();
+    output.push_str(&format!("url: {}\n\n", url));
+    output.push_str(&status);
+    output.push_str(&highlight_text(&headers, "yaml")?);
+    output.push_str(&highlight_text(&body, "json")?);
+    println!("{}", output);
 
     Ok(())
 }

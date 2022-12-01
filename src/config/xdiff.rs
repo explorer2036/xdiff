@@ -2,28 +2,28 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use super::{is_default, Load, Validate};
+use super::{Load, Validate};
 use crate::{context::ResponseContext, utils::build_diff, Args, RequestContext};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct XDiffConfig {
+pub struct DiffConfig {
     #[serde(flatten)]
-    items: HashMap<String, XDiffItem>,
+    items: HashMap<String, DiffItem>,
 }
 
-impl XDiffConfig {
-    pub fn new(items: HashMap<String, XDiffItem>) -> Self {
+impl DiffConfig {
+    pub fn new(items: HashMap<String, DiffItem>) -> Self {
         Self { items }
     }
 
-    pub fn get_item(&self, name: &str) -> Option<&XDiffItem> {
+    pub fn get_item(&self, name: &str) -> Option<&DiffItem> {
         self.items.get(name)
     }
 }
 
-impl Load for XDiffConfig {}
+impl Load for DiffConfig {}
 
-impl Validate for XDiffConfig {
+impl Validate for DiffConfig {
     fn validate(&self) -> Result<()> {
         for (name, item) in self.items.iter() {
             item.validate()
@@ -34,14 +34,18 @@ impl Validate for XDiffConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct XDiffItem {
+pub struct DiffItem {
     req1: RequestContext,
     req2: RequestContext,
     #[serde(skip_serializing_if = "is_default", default)]
     res: ResponseContext,
 }
 
-impl XDiffItem {
+fn is_default<T: Default + PartialEq>(v: &T) -> bool {
+    v == &T::default()
+}
+
+impl DiffItem {
     pub fn new(req1: RequestContext, req2: RequestContext, res: ResponseContext) -> Self {
         Self { req1, req2, res }
     }

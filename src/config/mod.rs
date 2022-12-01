@@ -4,11 +4,8 @@ use serde::de::DeserializeOwned;
 
 mod xdiff;
 mod xreq;
-pub use xdiff::{XDiffConfig, XDiffItem};
-
-fn is_default<T: Default + PartialEq>(v: &T) -> bool {
-    v == &T::default()
-}
+pub use xdiff::{DiffConfig, DiffItem};
+pub use xreq::RequestConfig;
 
 #[async_trait]
 pub trait Load

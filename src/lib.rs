@@ -4,7 +4,8 @@ mod context;
 mod utils;
 use cli::{KeyVal, KeyValType};
 
-pub use config::{Load, XDiffConfig, XDiffItem};
+pub use config::{DiffConfig, DiffItem, Load, RequestConfig};
+pub use context::{body_text, headers_text, status_text};
 pub use context::{RequestContext, ResponseContext};
 pub use utils::{build_diff, highlight_text};
 

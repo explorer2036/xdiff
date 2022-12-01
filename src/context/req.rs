@@ -89,6 +89,19 @@ impl RequestContext {
         Ok(ResponseHandler::new(res))
     }
 
+    pub fn url(&self, args: &Args) -> Result<String> {
+        let mut url = self.url.clone();
+        let mut query = self.params.clone().unwrap_or_else(|| json!({}));
+        for (k, v) in &args.query {
+            query[k] = v.parse()?;
+        }
+        if !query.as_object().unwrap().is_empty() {
+            let query = serde_qs::to_string(&query)?;
+            url.set_query(Some(&query));
+        }
+        Ok(url.to_string())
+    }
+
     pub fn validate(&self) -> Result<()> {
         if let Some(params) = self.params.as_ref() {
             if !params.is_object() {
