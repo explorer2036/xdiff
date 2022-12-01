@@ -1,11 +1,11 @@
 pub mod cli;
 mod config;
-mod request;
+mod context;
 mod utils;
 use cli::{KeyVal, KeyValType};
 
-pub use config::{Config, Item};
-pub use request::{RequestContext, ResponseContext};
+pub use config::{Load, XDiffConfig, XDiffItem};
+pub use context::{RequestContext, ResponseContext};
 pub use utils::{build_diff, highlight_text};
 
 #[derive(Debug, Default, Clone)]

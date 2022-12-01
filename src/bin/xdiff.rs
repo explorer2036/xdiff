@@ -7,10 +7,11 @@ use std::io::stdout;
 use std::io::Write;
 use xdiff::cli::{parse_key_val, KeyVal};
 use xdiff::Args;
-use xdiff::Config;
-use xdiff::Item;
+use xdiff::Load;
 use xdiff::RequestContext;
 use xdiff::ResponseContext;
+use xdiff::XDiffConfig;
+use xdiff::XDiffItem;
 
 /// Diff two http requests and compare the difference of the responses
 #[derive(Debug, Parser)]
@@ -89,8 +90,8 @@ async fn parse() -> Result<()> {
         .collect::<Vec<_>>();
 
     let response = ResponseContext::new(skip_headers, vec![]);
-    let item = Item::new(request1, request2, response);
-    let config = Config::new(vec![(item_name, item)].into_iter().collect());
+    let item = XDiffItem::new(request1, request2, response);
+    let config = XDiffConfig::new(vec![(item_name, item)].into_iter().collect());
     let output = serde_yaml::to_string(&config)?;
     let after_highlight = xdiff::highlight_text(&output, "yaml");
     let mut stdout = stdout().lock();
@@ -98,13 +99,13 @@ async fn parse() -> Result<()> {
     Ok(())
 }
 
-// cargo run -- run -i rust -a a=100 -a %b=1 -a @c=2
-// cargo run -- run -i todo -a a=100 -a %b=1 -a @c=2
+// cargo run --bin xdiff run -i todo -a a=100 -a %b=1 -a @c=2
+// cargo run --bin xdiff run -i rust -a a=100 -a %b=1 -a @c=2
 async fn run(opts: RunOptions) -> Result<()> {
     let file = opts
         .config
         .unwrap_or_else(|| "fixtures/test.yaml".to_string());
-    let config = Config::load_yaml(&file).await?;
+    let config = XDiffConfig::load_yaml(&file).await?;
 
     let item = config.get_item(&opts.item).ok_or_else(|| {
         anyhow::anyhow!("profile {} not found in config file {}", opts.item, file)

@@ -1,9 +1,9 @@
 use anyhow::Result;
-use xdiff::Config;
+use xdiff::{Load, XDiffConfig};
 
 fn main() -> Result<()> {
     let content = include_str!("../fixtures/test.yaml");
-    let config = Config::from_yaml(content)?;
+    let config = XDiffConfig::from_yaml(content)?;
     println!("{:?}", config);
     Ok(())
 }

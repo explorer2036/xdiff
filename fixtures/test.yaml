@@ -1,31 +1,31 @@
 ---
 rust:
-  request1:
+  req1:
     url: https://www.rust-lang.org/
     headers:
       user-agent: Aloha
     params:
       hello: world
-  request2:
+  req2:
     method: GET
     url: https://www.rust-lang.org/
     params:
-  response:
+  res:
     skip_headers:
       - set-cookie
       - date
       - via
       - x-amz-cf-id
 todo:
-  request1:
+  req1:
     url: https://jsonplaceholder.typicode.com/todos/1
     params:
       a: 100
-  request2:
+  req2:
     url: https://jsonplaceholder.typicode.com/todos/2
     params:
       c: 200
-  response:
+  res:
     skip_headers:
       - report-to
       - date
