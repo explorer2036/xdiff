@@ -99,11 +99,16 @@ async fn run(opts: RunOptions) -> Result<()> {
     let body = body_text(res, &[]).await?;
 
     let mut output = String::new();
-    output.push_str(&format!("url: {}\n\n", url));
-    output.push_str(&status);
-    output.push_str(&highlight_text(&headers, "yaml")?);
-    output.push_str(&highlight_text(&body, "json")?);
-    println!("{}", output);
+    if atty::is(atty::Stream::Stdout) {
+        output.push_str(&format!("url: {}\n\n", url));
+        output.push_str(&status);
+        output.push_str(&highlight_text(&headers, "yaml")?);
+        output.push_str(&highlight_text(&body, "json")?);
+    } else {
+        output.push_str(&body);
+    }
 
+    let mut stdout = std::io::stdout().lock();
+    write!(stdout, "{}", output)?;
     Ok(())
 }

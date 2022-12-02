@@ -10,6 +10,7 @@ path = "src/bin/xdiff.rs"
 [dependencies]
 anyhow = "1.0.66"
 async-trait = "0.1.59"
+atty = "0.2.14"
 clap = { version = "4.0.27", features = ["derive"] }
 console = "0.15.2"
 dialoguer = "0.10.2"
