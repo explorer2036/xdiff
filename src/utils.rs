@@ -75,3 +75,30 @@ pub fn highlight_text(text: &str, extension: &str) -> Result<String> {
     }
     Ok(output)
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn diff_text_should_work() {
+        let old = "foo\nbar";
+        let new = "foo\nbaz";
+        let diff = build_diff(old.to_string(), new.to_string()).unwrap();
+        let expected = include_str!("../fixtures/diff.txt");
+        assert_eq!(diff, expected);
+    }
+
+    #[test]
+    fn highlight_text_should_work() {
+        let source = json!({
+            "foo": "bar",
+            "baz": "qux"
+        });
+        let text = serde_json::to_string_pretty(&source).unwrap();
+        let expected = include_str!("../fixtures/highlight.txt");
+        assert_eq!(highlight_text(&text, "json").unwrap(), expected);
+    }
+}

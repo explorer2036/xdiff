@@ -2,10 +2,10 @@ use anyhow::Result;
 use async_trait::async_trait;
 use serde::de::DeserializeOwned;
 
-mod xdiff;
-mod xreq;
-pub use xdiff::{DiffConfig, DiffItem};
-pub use xreq::RequestConfig;
+pub mod xdiff;
+pub mod xreq;
+// pub use xdiff::{DiffConfig, DiffItem};
+// pub use xreq::RequestConfig;
 
 #[async_trait]
 pub trait Load

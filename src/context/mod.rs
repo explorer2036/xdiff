@@ -48,3 +48,25 @@ fn filter_json(text: &str, skip_body: &[String]) -> Result<String> {
     }
     Ok(serde_json::to_string_pretty(&json)?)
 }
+
+#[cfg(test)]
+mod tests {
+    use http::HeaderValue;
+
+    use super::*;
+
+    #[test]
+    fn test_resolve_content_type() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        );
+        assert_eq!(resolve_content_type(&headers), Some("application/json"));
+        headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json; charset=utf-8"),
+        );
+        assert_eq!(resolve_content_type(&headers), Some("application/json"));
+    }
+}
